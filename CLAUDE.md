@@ -24,3 +24,13 @@ Productfoto's van Shopify (cdn.shopify.com) zijn al openbaar en mogen direct als
 2. Commit + push naar `main`. De Action `render-reels` maakt `posts/<naam>.mp4` en cover `posts/<naam>.jpg`.
 3. Wacht tot `https://raw.githubusercontent.com/ASV-com/aysan-media/main/posts/<naam>.mp4` 200 geeft (poll elke 30 s, max 10 min; `git pull` en bekijk de cover met de Read-tool).
 4. Metricool `createScheduledPost`: providers instagram, instagramData {"type": "TRIAL_REEL"}, media [mp4-URL], videoThumbnailUrl [cover-URL], tekst + hashtags zoals een productpost. Geen mp4 binnen 10 min: sla de reel deze week over en meld het.
+
+## Media-inbox (Google Drive, map "Aysan Media")
+Het team (Aydin) zet ruwe foto's/video's in Drive. Zoek de map "Aysan Media" met de Google Drive-tools (search_files, download_file_content, update_file).
+- `1-ruw`: inbox van het team, naam `JJJJ-MM-DD-onderwerp.jpg|mp4`. De datum is de plaatsdag.
+- `2-klaar`: bewerkte versie die klaarstaat voor plaatsing (mag de agent zelf vullen).
+- `3-gepubliceerd`: archief. Verplaats het ruwe bronbestand hierheen (update_file met parentId) nadat de post is ingepland.
+- `brand`: master-kopie van logo's en profielfoto.
+
+Werkwijze: download uit `1-ruw`, bewerk in Canva (navy/oranje merkstijl), controleer het resultaat met de Read-tool, zet ALLEEN het eindbeeld/-video in `posts/` (nooit het ruwe bestand), push naar `main` en plan in volgens de werkwijzen hierboven.
+Niet gebruiken en melden aan V: personen herkenbaar in beeld, kentekens, klantgegevens, prijslijsten of documenten in beeld. Is een bestand onbruikbaar of past de naam niet: laat het in `1-ruw` staan en meld het.
