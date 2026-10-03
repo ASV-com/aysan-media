@@ -15,7 +15,8 @@ W, H, FPS = 1080, 1920, 30
 NAVY = (29, 31, 46); ORANGE = (255, 107, 0); WHITE = (255, 255, 255); GREY = (170, 175, 195)
 HERE = os.path.dirname(os.path.abspath(__file__))
 LOGO = os.path.join(HERE, '..', 'brand', 'logo_op_navy.png')
-INTRO, PER_IMG, OUTRO, FADE = 1.6, 2.6, 2.4, 0.3
+INTRO, OUTRO, FADE = 1.6, 2.4, 0.3
+MAX_PER_IMG, MAX_TOTAL = 4.4, 13.5  # totaal blijft zo tussen 8 en 14 s bij 1-4 foto's
 
 
 def font(bold, size):
@@ -82,9 +83,9 @@ def product_base(s):
     im = Image.new('RGB', (W, H), NAVY); d = ImageDraw.Draw(im)
     lg = logo(360); im.paste(lg, ((W - lg.width) // 2, 270), lg)
     y = title_block(d, dict(s, kicker=None), 270 + lg.height + 40, 58)
-    box = (90, y + 20, W - 90, 1330)  # wit paneel voor de foto
+    box = (90, y + 20, W - 90, 1280)  # wit paneel voor de foto
     d.rounded_rectangle(box, radius=36, fill=WHITE)
-    by = 1370
+    by = 1310
     if s.get('price'):
         f = font(True, 64); t = s['price']; tw = d.textlength(t, font=f)
         d.rounded_rectangle([(W - tw) / 2 - 36, by - 10, (W + tw) / 2 + 36, by + 82], radius=44, fill=ORANGE)
@@ -130,7 +131,8 @@ def main(spec, out):
         print('LET OP: titel heeft meer dan 6 woorden')
     photos = [load(u) for u in imgs]
     base, box = product_base(s)
-    scenes = [('static', intro(s), INTRO)] + [('photo', p, PER_IMG) for p in photos] + [('static', outro(s), OUTRO)]
+    per_img = min(MAX_PER_IMG, (MAX_TOTAL - INTRO - OUTRO) / len(photos))
+    scenes = [('static', intro(s), INTRO)] + [('photo', p, per_img) for p in photos] + [('static', outro(s), OUTRO)]
 
     cover = product_frame(base, box, photos[0], 0.0)
     cover.save(os.path.splitext(out)[0] + '.jpg', quality=92)

@@ -49,5 +49,6 @@ def main(spec,out):
             y+=12
     if s.get('cta'): y+=40; c(s['cta'],font(True,48),ORANGE,y)
     c(s.get('footer','DAF · MAN · Mercedes-Benz · Scania · Volvo · Iveco · Renault'),font(False,30),GREY,H-80)
+    if y>H-120: print('LET OP: tekst loopt tot y=%d, footer begint op %d (overlap)'%(y,H-80),file=sys.stderr)
     im.save(out,quality=92); print(out, W, H, 'y_end', y)
 if __name__=='__main__': main(sys.argv[1],sys.argv[2])
