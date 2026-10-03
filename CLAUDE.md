@@ -27,6 +27,6 @@ Productfoto's van Shopify (cdn.shopify.com) zijn al openbaar en mogen direct als
 
 ## Media van het team (Google Drive, map "Aysan Media")
 Efe maakt de media, Aydin zet ze direct in Drive `1-ruw`. Mediabeheer (assistent van V, ASV-com/ASV skill `media-beheer`) haalt ze op verzoek van V op (Google Drive-tools); de geplande social-agent heeft GEEN Drive-toegang en leest alleen deze repo.
-Mappen: `1-ruw` (nieuw, naam zonder datum), `2-klaar` (bewerkt, klaar voor social), `3-gepubliceerd` (live geweest), `4-archief` (niet meer in gebruik), `brand`.
-Keten: 1-ruw -> bewerkt -> `2-klaar` + `posts/JJJJ-MM-DD-onderwerp.jpg|mp4` -> social plant in en meldt GEPUBLICEERD op het teambord -> Mediabeheer zet een kopie in `3-gepubliceerd` -> ongebruikt/oud naar `4-archief`. Nooit definitief verwijderen. In `posts/` alleen eindbeeld, nooit ruw materiaal.
+Mappen: `1-ruw` (nieuw, naam zonder datum), `3-gepubliceerd` (live geweest), `4-archief` (niet meer in gebruik), `brand`.
+Keten: 1-ruw -> bewerkt -> `posts/JJJJ-MM-DD-onderwerp.jpg|mp4` -> social plant in en meldt GEPUBLICEERD op het teambord -> Mediabeheer zet een kopie in `3-gepubliceerd` -> ongebruikt/oud naar `4-archief`. Nooit definitief verwijderen. In `posts/` alleen eindbeeld, nooit ruw materiaal.
 Niet gebruiken en eerst V vragen: herkenbare personen (ook tevreden klanten: schriftelijke toestemming, zet geen bestand met personen in de openbare repo voor V akkoord geeft), kentekens, klantgegevens, prijslijsten of documenten in beeld.
