@@ -4,7 +4,7 @@ Deze repository is OPENBAAR. Alleen beeldmateriaal voor social media.
 Nooit code van het voorraadsysteem, prijslijsten, klant- of ordergegevens, budgetten of tokens.
 
 ## Structuur
-- `posts/` : een JPEG per post, naam `JJJJ-MM-DD-onderwerp.jpg` (kleine letters, koppeltekens)
+- `posts/` : een JPEG per post (of mp4 + cover-JPEG bij een reel), naam `JJJJ-MM-DD-onderwerp.jpg|mp4` (kleine letters, koppeltekens). Alleen eindbeeld, nooit ruw materiaal.
 - `brand/` : logo's, profielfoto, omslagfoto. Niet overschrijven zonder opdracht van V.
 - `tools/make_post.py` : maakt merk-afbeeldingen (navy/oranje) uit een JSON-spec, 4:5 post of 9:16 story.
 - `tools/make_reel.py` + `reels/` : 9:16-reel (mp4, 8-14 s) uit 1-4 Shopify-foto's. Rendert via GitHub Actions (de sandbox kan cdn.shopify.com niet bereiken).
