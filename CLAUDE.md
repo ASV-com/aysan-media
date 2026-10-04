@@ -5,7 +5,7 @@ Nooit code van het voorraadsysteem, prijslijsten, klant- of ordergegevens, budge
 
 ## Structuur
 - `posts/` : een JPEG per post (of mp4 + cover-JPEG bij een reel), naam `JJJJ-MM-DD-onderwerp.jpg|mp4` (kleine letters, koppeltekens). Alleen eindbeeld, nooit ruw materiaal.
-- `brand/` : logo's, profielfoto, omslagfoto. Niet overschrijven zonder opdracht van V. Muziek staat NIET hier (licentie: geen herverspreiding) maar in Drive "Aysan Media/brand/muziek".
+- `brand/` : logo's, profielfoto, omslagfoto. Niet overschrijven zonder opdracht van V. `brand/music/`: EIGEN composities (tools/make_music.py, eigendom Aysan, vrij te gebruiken). Muziek van derden nooit in deze repo.
 - `tools/make_post.py` : maakt merk-afbeeldingen (navy/oranje) uit een JSON-spec, 4:5 post of 9:16 story.
 - `tools/edit_media.py` : bewerkt ruwe video/foto (knippen, 9:16, kleur, geluid, ondertitels, logo, eindkaart, scenes, stabiliseren, ruisonderdrukking, muziek met ducking, woord-voor-woord ondertitels, inzoomen, productfoto-kaart, vervagen van gezichten/kentekens, slim 9:16-uitsnijden (OpenCV: pip install "opencv-python-headless<5"); alleen ffmpeg; transcriptie via de Action in de privé-repo ASV, nooit audio hier). `edit_media.py check <bestand>` = verplichte technische keuring van elk eindbestand voor het in `posts/` komt voor de Mediabewerker (ASV-skill `media-studio`). Bronnen lokaal, nooit in de repo.
 - `tools/make_reel.py` + `reels/` : 9:16-reel (mp4, 8-14 s) uit 1-4 Shopify-foto's. Rendert via GitHub Actions (de sandbox kan cdn.shopify.com niet bereiken).
