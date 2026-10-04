@@ -11,7 +11,7 @@
   python3 tools/edit_media.py audio ruw.mp4 uit.opus      # compact spraakspoor (16 kHz mono) voor transcriptie
   python3 tools/edit_media.py anonymize ruw.mp4 uit.mp4 [spec.json]  # gezichten auto + kentekens/vlakken vervagen (OpenCV)
   python3 tools/edit_media.py reframe ruw.mp4 uit.mp4     # liggend -> 9:16 die het onderwerp volgt (OpenCV)
-  python3 tools/edit_media.py check eind.mp4|eind.jpg [ondertitels.srt]
+  python3 tools/edit_media.py check eind.mp4|eind.jpg [ondertitels.srt] [--foto]   # --foto: reel uit stilstaande foto's (make_reel)
         # technische keuring van het EINDBESTAND; exit 1 bij AFGEKEURD (dan niet naar V/posts)
   python3 tools/edit_media.py transcribe ruw.mp4|.opus uit.srt [nl|tr]
         # spraak -> ondertitels (.srt, max 32 tekens per regel). Lokaal alleen als faster-whisper +
@@ -627,7 +627,7 @@ def cmd_transcribe(src, out, lang='nl', model=None):
 ENDCARD = 2.4  # statische eindkaart: niet als 'bevroren' rekenen
 
 
-def cmd_check(path, srt=None):
+def cmd_check(path, srt=None, foto=False):
     """Harde eisen voor een eindbestand. Print per eis OK/FOUT; exit 1 bij een FOUT."""
     import re
     res = []
@@ -673,7 +673,12 @@ def cmd_check(path, srt=None):
         r = subprocess.run(['ffmpeg', '-hide_banner', '-t', '%.2f' % max(dur - ENDCARD - 0.2, 0.5), '-i', path,
                             '-vf', 'freezedetect=n=0.002:d=1.2', '-an', '-f', 'null', '-'], capture_output=True, text=True)
         bev = re.findall(r'freeze_duration: ([0-9.]+)', r.stderr)
-        eis(not bev, 'geen bevroren beeld (>= 1,2 s, eindkaart uitgezonderd)', ', '.join(bev) + ' s' if bev else '')
+        if foto:
+            # foto-reel: stilstaande dia's zijn bedoeld; alleen een dia langer dan 4 s is een fout
+            lang = [b for b in bev if float(b) > 4.0]
+            eis(not lang, 'geen dia langer dan 4 s (foto-reel)', ', '.join(lang) + ' s' if lang else '')
+        else:
+            eis(not bev, 'geen bevroren beeld (>= 1,2 s, eindkaart uitgezonderd)', ', '.join(bev) + ' s' if bev else '')
         r = subprocess.run(['ffmpeg', '-hide_banner', '-v', 'error', '-i', path, '-f', 'null', '-'], capture_output=True, text=True)
         eis(not r.stderr.strip(), 'decodeert zonder fouten', r.stderr.strip()[:80])
         mv = subprocess.run(['ffprobe', '-v', 'trace', '-i', path], capture_output=True, text=True).stderr
@@ -714,7 +719,8 @@ def main():
     elif len(a) >= 3 and a[0] == 'reframe':
         cmd_reframe(a[1], a[2])
     elif len(a) >= 2 and a[0] == 'check':
-        cmd_check(a[1], a[2] if len(a) > 2 else None)
+        rest = [x for x in a[2:] if x != '--foto']
+        cmd_check(a[1], rest[0] if rest else None, foto='--foto' in a)
     elif len(a) >= 3 and a[0] == 'transcribe':
         cmd_transcribe(a[1], a[2], a[3] if len(a) > 3 else 'nl')
     elif len(a) >= 2 and a[0] == 'info':

@@ -24,6 +24,7 @@ Productfoto's van Shopify (cdn.shopify.com) zijn al openbaar en mogen direct als
 1. Schrijf `reels/JJJJ-MM-DD-onderwerp.json`: {"images": [1-4 cdn.shopify.com-URL's], "kicker": "OUTLET" of leeg, "title": max 6 woorden, "price": exact Shopify-prijs + " excl. btw", "line": bv. "Op = op." (alleen outlet), "cta": "aysantruckparts.com"}. Alleen toegestane claims.
 2. Commit + push naar `main`. De Action `render-reels` maakt `posts/<naam>.mp4` en cover `posts/<naam>.jpg`.
 3. Wacht tot `https://raw.githubusercontent.com/ASV-com/aysan-media/main/posts/<naam>.mp4` 200 geeft (poll elke 30 s, max 10 min; `git pull` en bekijk de cover met de Read-tool).
+   Keur daarna: `python3 tools/edit_media.py check posts/<naam>.mp4 --foto` (stilstaande dia's zijn dan geen fout). AFGEKEURD = niet inplannen en melden.
 4. Metricool `createScheduledPost`: providers instagram, instagramData {"type": "TRIAL_REEL"}, media [mp4-URL], videoThumbnailUrl [cover-URL], tekst + hashtags zoals een productpost. Geen mp4 binnen 10 min: sla de reel deze week over en meld het.
 
 ## Media van het team (Google Drive, map "Aysan Media")
