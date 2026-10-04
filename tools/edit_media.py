@@ -5,6 +5,13 @@
   python3 tools/edit_media.py photo spec.json uit.jpg     # post 4:5 of story 9:16
   python3 tools/edit_media.py sheet bestand.mp4 sheet.jpg # contactsheet om te beoordelen
   python3 tools/edit_media.py info  bestand               # duur, afmeting, audio
+  python3 tools/edit_media.py scenes bestand.mp4 [0.3]    # scenewissels -> shots (JSON), basis voor cuts
+  python3 tools/edit_media.py stabilize ruw.mp4 uit.mp4   # trillend beeld stabiliseren (vidstab, 2 passes)
+  python3 tools/edit_media.py denoise ruw.mp4 uit.mp4     # ruis uit geluid (wind, magazijn); beeld ongewijzigd
+  python3 tools/edit_media.py audio ruw.mp4 uit.opus      # compact spraakspoor (16 kHz mono) voor transcriptie
+  python3 tools/edit_media.py transcribe ruw.mp4|.opus uit.srt [nl|tr]
+        # spraak -> ondertitels (.srt, max 32 tekens per regel). Lokaal alleen als faster-whisper +
+        # model beschikbaar zijn; anders via de Action 'transcribe' in de PRIVE-repo ASV-com/ASV.
 
 clip-spec (alle velden behalve src optioneel):
   {"src": "pad/naar/ruw.mp4",
@@ -222,6 +229,101 @@ def cmd_sheet(src, out, n=12, cols=4):
     print('klaar: %s (%d frames over %.1f s)' % (out, n, info['dur']))
 
 
+def cmd_scenes(src, thr=0.3):
+    """Scenewissels via ffmpeg-scorewaarde; geeft shots met begin/eind/lengte."""
+    info = probe(src)
+    r = subprocess.run(['ffmpeg', '-hide_banner', '-i', src, '-vf', "select='gt(scene,%s)',showinfo" % thr,
+                        '-an', '-f', 'null', '-'], capture_output=True, text=True)
+    import re
+    cuts = sorted({round(float(m), 2) for m in re.findall(r'pts_time:([0-9.]+)', r.stderr)})
+    edges = [0.0] + [c for c in cuts if 0.3 < c < info['dur'] - 0.3] + [round(info['dur'], 2)]
+    shots = [{'start': a, 'end': b, 'len': round(b - a, 2)} for a, b in zip(edges, edges[1:]) if b - a >= 0.2]
+    print(json.dumps({'dur': round(info['dur'], 2), 'drempel': thr, 'shots': shots}, indent=1))
+
+
+def has_filter(name):
+    r = subprocess.run(['ffmpeg', '-hide_banner', '-filters'], capture_output=True, text=True)
+    return (' %s ' % name) in r.stdout
+
+
+def cmd_stabilize(src, out):
+    """2-pass vidstab (lichte zoom tegen zwarte randen); valt terug op deshake."""
+    tmp = tempfile.mkdtemp()
+    trf = os.path.join(tmp, 't.trf')
+    enc = ['-c:v', 'libx264', '-preset', 'medium', '-crf', '17', '-pix_fmt', 'yuv420p', '-c:a', 'copy',
+           '-movflags', '+faststart']
+    if has_filter('vidstabdetect'):
+        run(['ffmpeg', '-y', '-loglevel', 'error', '-i', src, '-vf',
+             'vidstabdetect=shakiness=6:accuracy=15:result=%s' % trf, '-f', 'null', '-'])
+        vf = 'vidstabtransform=input=%s:smoothing=15:optzoom=1:zoomspeed=0.25:interpol=bicubic,unsharp=5:5:0.5' % trf
+        how = 'vidstab'
+    else:
+        vf, how = 'deshake', 'deshake'
+    run(['ffmpeg', '-y', '-loglevel', 'error', '-i', src, '-vf', vf] + enc + [out])
+    shutil.rmtree(tmp, ignore_errors=True)
+    print('klaar: %s (gestabiliseerd met %s)' % (out, how))
+
+
+def cmd_denoise(src, out):
+    """Spraakvriendelijke ruisonderdrukking; beeld wordt alleen gekopieerd."""
+    if not probe(src)['audio']:
+        sys.exit('geen geluidsspoor in ' + src)
+    af = 'highpass=f=80,lowpass=f=12000,afftdn=nr=14:nf=-30:tn=1,loudnorm=I=-16:TP=-1.5:LRA=11'
+    run(['ffmpeg', '-y', '-loglevel', 'error', '-i', src, '-af', af, '-c:v', 'copy', '-c:a', 'aac', '-b:a', '160k',
+         '-ar', '44100', '-movflags', '+faststart', out])
+    print('klaar: %s (ruis verminderd, -16 LUFS)' % out)
+
+
+def cmd_audio(src, out):
+    """Alleen spraak, klein bestand (ca. 3 kB/s) voor de transcriptie-Action."""
+    run(['ffmpeg', '-y', '-loglevel', 'error', '-i', src, '-vn', '-ac', '1', '-ar', '16000',
+         '-af', 'highpass=f=80,afftdn=nr=10', '-c:a', 'libopus', '-b:a', '24k', out])
+    print('klaar: %s' % out)
+
+
+def srt_time(t):
+    ms = int(round(t * 1000))
+    return '%02d:%02d:%02d,%03d' % (ms // 3600000, ms // 60000 % 60, ms // 1000 % 60, ms % 1000)
+
+
+def words_to_srt(words, maxlen=32, maxdur=3.2):
+    """words: [(start, end, tekst)] -> srt-tekst, 1 regel per cue, max maxlen tekens."""
+    cues, cur = [], []
+    for w in words:
+        txt = ' '.join(x[2].strip() for x in cur + [w])
+        if cur and (len(txt) > maxlen or w[1] - cur[0][0] > maxdur or cur[-1][2].rstrip().endswith(('.', '?', '!'))
+                    or (cur[-1][2].rstrip().endswith((',', ';', ':')) and len(' '.join(x[2].strip() for x in cur)) >= 14)):
+            cues.append(cur)
+            cur = []
+        cur.append(w)
+    if cur:
+        cues.append(cur)
+    out = []
+    for i, c in enumerate(cues, 1):
+        out.append('%d\n%s --> %s\n%s\n' % (i, srt_time(c[0][0]), srt_time(c[-1][1]),
+                                              ' '.join(x[2].strip() for x in c)))
+    return '\n'.join(out)
+
+
+def cmd_transcribe(src, out, lang='nl', model=None):
+    try:
+        from faster_whisper import WhisperModel
+    except ImportError:
+        sys.exit('faster-whisper niet geinstalleerd. In de sandbox: gebruik de Action "transcribe" in ASV-com/ASV '
+                 '(zie skill media-studio).')
+    model = model or os.environ.get('WHISPER_MODEL', 'small')
+    try:
+        m = WhisperModel(model, device='cpu', compute_type='int8')
+    except Exception as e:
+        sys.exit('Whisper-model "%s" niet te laden (%s). In de sandbox: gebruik de Action "transcribe".' % (model, e))
+    segs, _ = m.transcribe(src, language=lang, word_timestamps=True, vad_filter=True, beam_size=5)
+    words = [(w.start, w.end, w.word) for sg in segs for w in (sg.words or [])]
+    if not words:
+        sys.exit('geen spraak gevonden in ' + src)
+    open(out, 'w', encoding='utf-8').write(words_to_srt(words))
+    print('klaar: %s (%d woorden, taal %s, model %s)' % (out, len(words), lang, model))
+
+
 def main():
     a = sys.argv[1:]
     if len(a) >= 3 and a[0] == 'clip':
@@ -230,6 +332,16 @@ def main():
         cmd_photo(a[1], a[2])
     elif len(a) >= 3 and a[0] == 'sheet':
         cmd_sheet(a[1], a[2])
+    elif len(a) >= 2 and a[0] == 'scenes':
+        cmd_scenes(a[1], float(a[2]) if len(a) > 2 else 0.3)
+    elif len(a) >= 3 and a[0] == 'stabilize':
+        cmd_stabilize(a[1], a[2])
+    elif len(a) >= 3 and a[0] == 'denoise':
+        cmd_denoise(a[1], a[2])
+    elif len(a) >= 3 and a[0] == 'audio':
+        cmd_audio(a[1], a[2])
+    elif len(a) >= 3 and a[0] == 'transcribe':
+        cmd_transcribe(a[1], a[2], a[3] if len(a) > 3 else 'nl')
     elif len(a) >= 2 and a[0] == 'info':
         print(json.dumps(probe(a[1])))
     else:
