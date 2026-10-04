@@ -9,6 +9,8 @@
   python3 tools/edit_media.py stabilize ruw.mp4 uit.mp4   # trillend beeld stabiliseren (vidstab, 2 passes)
   python3 tools/edit_media.py denoise ruw.mp4 uit.mp4     # ruis uit geluid (wind, magazijn); beeld ongewijzigd
   python3 tools/edit_media.py audio ruw.mp4 uit.opus      # compact spraakspoor (16 kHz mono) voor transcriptie
+  python3 tools/edit_media.py check eind.mp4|eind.jpg [ondertitels.srt]
+        # technische keuring van het EINDBESTAND; exit 1 bij AFGEKEURD (dan niet naar V/posts)
   python3 tools/edit_media.py transcribe ruw.mp4|.opus uit.srt [nl|tr]
         # spraak -> ondertitels (.srt, max 32 tekens per regel). Lokaal alleen als faster-whisper +
         # model beschikbaar zijn; anders via de Action 'transcribe' in de PRIVE-repo ASV-com/ASV.
@@ -330,6 +332,75 @@ def cmd_transcribe(src, out, lang='nl', model=None):
     print('klaar: %s (%d woorden, taal %s, model %s)' % (out, len(words), lang, model))
 
 
+ENDCARD = 2.4  # statische eindkaart: niet als 'bevroren' rekenen
+
+
+def cmd_check(path, srt=None):
+    """Harde eisen voor een eindbestand. Print per eis OK/FOUT; exit 1 bij een FOUT."""
+    import re
+    res = []
+
+    def eis(ok, naam, detail=''):
+        res.append((ok, naam, detail))
+
+    if path.lower().endswith(('.jpg', '.jpeg', '.png')):
+        j = json.loads(run(['ffprobe', '-v', 'error', '-print_format', 'json', '-show_streams', path]))
+        st = j['streams'][0]
+        w, h = int(st['width']), int(st['height'])
+        eis((w, h) in [(1080, 1350), (1080, 1920)], 'afmeting 1080x1350 (post) of 1080x1920 (story)', '%dx%d' % (w, h))
+        eis(os.path.getsize(path) < 8_000_000, 'bestand < 8 MB', '%.1f MB' % (os.path.getsize(path) / 1e6))
+    else:
+        j = json.loads(run(['ffprobe', '-v', 'error', '-print_format', 'json', '-show_format', '-show_streams', path]))
+        v = next((x for x in j['streams'] if x['codec_type'] == 'video'), None)
+        a = next((x for x in j['streams'] if x['codec_type'] == 'audio'), None)
+        dur = float(j['format']['duration'])
+        num, den = (v['r_frame_rate'].split('/') + ['1'])[:2]
+        fps = float(num) / float(den or 1)
+        eis((int(v['width']), int(v['height'])) == (W, H), 'afmeting 1080x1920 (9:16)', '%sx%s' % (v['width'], v['height']))
+        eis(abs(fps - FPS) < 0.5, '30 fps', '%.2f' % fps)
+        eis(v['codec_name'] == 'h264' and v.get('pix_fmt') == 'yuv420p', 'H.264 yuv420p', '%s %s' % (v['codec_name'], v.get('pix_fmt')))
+        eis(8.0 <= dur <= 14.0, 'lengte 8-14 s', '%.1f s' % dur)
+        eis(a is not None and a['codec_name'] == 'aac', 'geluidsspoor AAC aanwezig', a['codec_name'] if a else 'geen')
+        eis(os.path.getsize(path) < 100_000_000, 'bestand < 100 MB', '%.1f MB' % (os.path.getsize(path) / 1e6))
+        if a:
+            r = subprocess.run(['ffmpeg', '-hide_banner', '-i', path, '-af', 'loudnorm=print_format=json', '-f', 'null', '-'],
+                               capture_output=True, text=True)
+            mi = re.search(r'"input_i"\s*:\s*"(-?[0-9.inf]+)"', r.stderr)
+            li = float(mi.group(1)) if mi and 'inf' not in mi.group(1) else -99.0
+            mp = re.search(r'"input_tp"\s*:\s*"(-?[0-9.inf]+)"', r.stderr)
+            tp = float(mp.group(1)) if mp and 'inf' not in mp.group(1) else -99.0
+            if li < -60:
+                eis(True, 'geluid stil (mute) of -16 LUFS', 'stil')
+            else:
+                eis(-17.5 <= li <= -14.5, 'luidheid -16 LUFS (+/-1,5)', '%.1f LUFS' % li)
+                eis(tp <= -0.5, 'geen oversturing (true peak <= -0,5 dB)', '%.1f dB' % tp)
+        r = subprocess.run(['ffmpeg', '-hide_banner', '-i', path, '-vf', 'blackdetect=d=0.4:pix_th=0.06', '-an', '-f', 'null', '-'],
+                           capture_output=True, text=True)
+        zwart = re.findall(r'black_duration:([0-9.]+)', r.stderr)
+        eis(not zwart, 'geen zwart beeld (>= 0,4 s)', ', '.join(zwart) + ' s' if zwart else '')
+        r = subprocess.run(['ffmpeg', '-hide_banner', '-t', '%.2f' % max(dur - ENDCARD - 0.2, 0.5), '-i', path,
+                            '-vf', 'freezedetect=n=0.002:d=1.2', '-an', '-f', 'null', '-'], capture_output=True, text=True)
+        bev = re.findall(r'freeze_duration: ([0-9.]+)', r.stderr)
+        eis(not bev, 'geen bevroren beeld (>= 1,2 s, eindkaart uitgezonderd)', ', '.join(bev) + ' s' if bev else '')
+        r = subprocess.run(['ffmpeg', '-hide_banner', '-v', 'error', '-i', path, '-f', 'null', '-'], capture_output=True, text=True)
+        eis(not r.stderr.strip(), 'decodeert zonder fouten', r.stderr.strip()[:80])
+        mv = subprocess.run(['ffprobe', '-v', 'trace', '-i', path], capture_output=True, text=True).stderr
+        mo, md = mv.find("type:'moov'"), mv.find("type:'mdat'")
+        eis(0 <= mo < md, 'faststart (moov voor mdat)', '')
+    if srt:
+        txt = open(srt, encoding='utf-8').read()
+        regels = [l for l in txt.splitlines() if l.strip() and not l.strip().isdigit() and '-->' not in l]
+        te_lang = [l for l in regels if len(l) > 32]
+        eis(not te_lang, 'ondertitels max. 32 tekens per regel', '; '.join(te_lang[:2]))
+        eis(all(len(b.strip().splitlines()) <= 3 for b in txt.strip().split('\n\n')), 'max. 1 tekstregel per ondertitel', '')
+    fouten = [r for r in res if not r[0]]
+    for ok, naam, det in res:
+        print('%-4s %s%s' % ('OK' if ok else 'FOUT', naam, (' (%s)' % det) if det else ''))
+    print('KEURING: %s (%d/%d eisen)' % ('GOEDGEKEURD' if not fouten else 'AFGEKEURD', len(res) - len(fouten), len(res)))
+    if fouten:
+        sys.exit(1)
+
+
 def main():
     a = sys.argv[1:]
     if len(a) >= 3 and a[0] == 'clip':
@@ -346,6 +417,8 @@ def main():
         cmd_denoise(a[1], a[2])
     elif len(a) >= 3 and a[0] == 'audio':
         cmd_audio(a[1], a[2])
+    elif len(a) >= 2 and a[0] == 'check':
+        cmd_check(a[1], a[2] if len(a) > 2 else None)
     elif len(a) >= 3 and a[0] == 'transcribe':
         cmd_transcribe(a[1], a[2], a[3] if len(a) > 3 else 'nl')
     elif len(a) >= 2 and a[0] == 'info':
