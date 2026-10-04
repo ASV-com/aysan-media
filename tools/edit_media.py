@@ -316,7 +316,13 @@ def cmd_transcribe(src, out, lang='nl', model=None):
         m = WhisperModel(model, device='cpu', compute_type='int8')
     except Exception as e:
         sys.exit('Whisper-model "%s" niet te laden (%s). In de sandbox: gebruik de Action "transcribe".' % (model, e))
-    segs, _ = m.transcribe(src, language=lang, word_timestamps=True, vad_filter=True, beam_size=5)
+    # vaktermen sturen de herkenning (merken, onderdelen) zonder ze af te dwingen
+    hint = {'nl': 'Aysan Truckparts. DAF, MAN, Scania, Volvo, Mercedes-Benz, Iveco, Renault. Spiegel, bumper, '
+                  'spatbord, NOx-sensor, OEM-nummer, excl. btw, Zoetermeer.',
+            'tr': 'Aysan Truckparts. DAF, MAN, Scania, Volvo, Mercedes-Benz, Iveco, Renault. Ayna, tampon, '
+                  'çamurluk, NOx sensörü, OEM numarası.'}.get(lang)
+    segs, _ = m.transcribe(src, language=lang, word_timestamps=True, vad_filter=True, beam_size=5,
+                           initial_prompt=hint)
     words = [(w.start, w.end, w.word) for sg in segs for w in (sg.words or [])]
     if not words:
         sys.exit('geen spraak gevonden in ' + src)
