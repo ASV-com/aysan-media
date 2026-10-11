@@ -567,10 +567,10 @@ def cmd_denoise(src, out):
     """Spraakvriendelijke ruisonderdrukking; beeld wordt alleen gekopieerd."""
     if not probe(src)['audio']:
         sys.exit('geen geluidsspoor in ' + src)
-    af = 'highpass=f=80,lowpass=f=12000,afftdn=nr=14:nf=-30:tn=1,loudnorm=I=-16:TP=-1.5:LRA=11'
+    af = 'highpass=f=100,lowpass=f=8500,afftdn=nr=20:nf=-38:tn=1'  # geen loudnorm hier: dat trekt de ruis in pauzes weer op; clip normaliseert
     run(['ffmpeg', '-y', '-loglevel', 'error', '-i', src, '-af', af, '-c:v', 'copy', '-c:a', 'aac', '-b:a', '160k',
          '-ar', '44100', '-movflags', '+faststart', out])
-    print('klaar: %s (ruis verminderd, -16 LUFS)' % out)
+    print('klaar: %s (ruis verminderd)' % out)
 
 
 def cmd_audio(src, out):
