@@ -25,7 +25,7 @@ clip-spec (alle velden behalve src optioneel):
    "title": "Max 6 woorden",             # eerste 3 s, binnen de veilige zone
    "subs": "ondertitels.srt",            # ingebrand, onder in de veilige zone
    "logo": true,                          # wit logo rechtsboven (veilige zone)
-   "endcard": {"line": "Op = op.", "cta": "aysantruckparts.com"},
+   "endcard": {"line": "Op = op.", "cta": "aysantruckparts.com", "phone": "085 401 1031"},  # phone optioneel
    "audio": "keep"|"mute",                # keep: loudnorm -16 LUFS; mute: stil spoor
    "captions": "x.words.json",           # woord-voor-woord ondertitels (uit transcribe; brontijden, cuts worden verrekend)
    "music": {"track": "muziek.mp3", "volume": 0.22, "start": 0},  # rechtenvrij; duikt automatisch onder spraak
@@ -259,6 +259,9 @@ def cmd_clip(spec_path, out):
         if tf1:
             vf.append(drawtext(tf1, 84, '(h/2)-260', box=False))
         vf.append(drawtext(tf2, 58, '(h/2)+170', color=ORANGE, box=False))
+        if ec.get('phone'):
+            tf3 = textfile(tmp, 'e3.txt', ec['phone'])
+            vf.append(drawtext(tf3, 58, '(h/2)+270', color=ORANGE, box=False))
         fc = ('color=c=%s:s=%dx%d:d=2.4:r=%d[bg];[1:v]scale=420:-1[lg];[bg][lg]overlay=(W-w)/2:(H/2)-520[o];[o]%s,format=yuv420p[v]'
               % (NAVY, W, H, FPS, ','.join(vf)))
         run(['ffmpeg', '-y', '-loglevel', 'error', '-f', 'lavfi', '-i', 'anullsrc=r=44100:cl=stereo', '-i', os.path.abspath(LOGO_WIT),
