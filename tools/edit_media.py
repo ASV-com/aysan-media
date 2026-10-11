@@ -29,6 +29,7 @@ clip-spec (alle velden behalve src optioneel):
    "audio": "keep"|"mute",                # keep: loudnorm -16 LUFS; mute: stil spoor
    "captions": "x.words.json",           # woord-voor-woord ondertitels (uit transcribe; brontijden, cuts worden verrekend)
    "music": {"track": "muziek.mp3", "volume": 0.22, "start": 0},  # rechtenvrij; duikt automatisch onder spraak
+   "overlay": {"src": "balk.png", "y": 250},                       # vaste PNG-balk over de hele clip (1080 breed)
    "insert": {"src": "product.jpg", "start": 1.0, "end": 4.0}}    # productfoto als kaart in beeld
   cuts mag per stuk opties hebben: [2.0, 5.0, {"zoom": 1.15}] (langzaam inzoomen; "dir": "out" = uitzoomen)
 photo-spec: {"src": "pad.jpg", "format": "post"|"story", "focus_x": 0.5, "focus_y": 0.5,
@@ -235,6 +236,13 @@ def cmd_clip(spec_path, out):
                      % (idx, int(ins.get('width', 600)), st, max(en - 0.25, st)))
         parts.append("%s[ins]overlay=(W-w)/2:%s:enable='between(t,%s,%s)'[vi]" % (last, ins.get('y', 600), st, en))
         last = '[vi]'
+    ov = s.get('overlay')
+    if ov:
+        # vaste balk/PNG over de hele clip (bv. logo + telefoonnummer bovenin); eindkaart blijft erbuiten
+        idx = inputs.count('-i')
+        inputs += ['-loop', '1', '-t', '%.3f' % total, '-i', os.path.abspath(ov['src'])]
+        parts.append("%s[%d:v]overlay=0:%s:format=auto[vb]" % (last, idx, ov.get('y', 250)))
+        last = '[vb]'
     parts.append('%sformat=yuv420p[vf]' % last)
     main = os.path.join(tmp, 'main.mp4')
     if mute:
