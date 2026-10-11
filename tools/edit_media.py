@@ -41,6 +41,7 @@ import json, os, shutil, subprocess, sys, tempfile
 W, H, FPS = 1080, 1920, 30
 HERE = os.path.dirname(os.path.abspath(__file__))
 LOGO_WIT = os.path.join(HERE, '..', 'brand', 'logo_op_wit.png')
+LOGO_NAVY = os.path.join(HERE, '..', 'brand', 'logo_op_navy.png')  # achtergrond = NAVY, voor de eindkaart
 FONT_B = next((p for p in ['/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf',
                            '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf'] if os.path.exists(p)), None)
 NAVY, ORANGE = '0x1D1F2E', '0xFF6B00'
@@ -264,7 +265,7 @@ def cmd_clip(spec_path, out):
             vf.append(drawtext(tf3, 58, '(h/2)+270', color=ORANGE, box=False))
         fc = ('color=c=%s:s=%dx%d:d=2.4:r=%d[bg];[1:v]scale=420:-1[lg];[bg][lg]overlay=(W-w)/2:(H/2)-520[o];[o]%s,format=yuv420p[v]'
               % (NAVY, W, H, FPS, ','.join(vf)))
-        run(['ffmpeg', '-y', '-loglevel', 'error', '-f', 'lavfi', '-i', 'anullsrc=r=44100:cl=stereo', '-i', os.path.abspath(LOGO_WIT),
+        run(['ffmpeg', '-y', '-loglevel', 'error', '-f', 'lavfi', '-i', 'anullsrc=r=44100:cl=stereo', '-i', os.path.abspath(LOGO_NAVY),
              '-filter_complex', fc, '-map', '[v]', '-map', '0:a', '-t', '2.4', '-c:v', 'libx264', '-crf', '18', '-r', str(FPS),
              '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-ar', '44100', '-ac', '2', end])
         final = os.path.join(tmp, 'all.mp4')
