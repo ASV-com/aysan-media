@@ -257,7 +257,7 @@ def cmd_clip(spec_path, out):
         tf2 = textfile(tmp, 'e2.txt', ec.get('cta', 'aysantruckparts.com'))
         vf = []
         # elke regel apart gecentreerd (drawtext centreert anders alleen het blok)
-        for i, ln in enumerate(wrap_text(ec.get('line', ''), 20).split('\n') if ec.get('line') else []):
+        for i, ln in enumerate(wrap_text(ec.get('line', ''), int(ec.get('wrap', 20))).split('\n') if ec.get('line') else []):
             vf.append(drawtext(textfile(tmp, 'e1_%d.txt' % i, ln), 84, '(h/2)-260+%d' % (i * 100), box=False))
         vf.append(drawtext(tf2, 58, '(h/2)+170', color=ORANGE, box=False))
         if ec.get('phone'):
