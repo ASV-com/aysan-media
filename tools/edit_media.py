@@ -192,7 +192,7 @@ def cmd_clip(spec_path, out):
         parts.append('[0:v]trim=start=%s:end=%s,setpts=PTS-STARTPTS,%s,fps=%d%s,setsar=1[v%d]' % (a, b, cf, FPS, zf, i))
         vl.append('[v%d]' % i)
         if not mute:
-            parts.append('[0:a]atrim=start=%s:end=%s,asetpts=PTS-STARTPTS,aresample=44100[a%d]' % (a, b, i))
+            parts.append('[0:a]atrim=start=%s:end=%s,asetpts=PTS-STARTPTS,aresample=44100,afade=t=in:d=0.02,afade=t=out:st=%.3f:d=0.02[a%d]' % (a, b, max(b - a - 0.02, 0), i))  # 20 ms fades tegen klikjes op de knip
             al.append('[a%d]' % i)
     n = len(cuts)
     if mute:
@@ -260,6 +260,7 @@ def cmd_clip(spec_path, out):
         sys.exit('ffmpeg faalde:\n' + r.stderr[-1500:])
     final, dur = main, total
     ec = s.get('endcard')
+    ECD = float((ec or {}).get('dur', 2.4))
     if ec:
         end = os.path.join(tmp, 'end.mp4')
         tf2 = textfile(tmp, 'e2.txt', ec.get('cta', 'aysantruckparts.com'))
@@ -271,17 +272,17 @@ def cmd_clip(spec_path, out):
         if ec.get('phone'):
             tf3 = textfile(tmp, 'e3.txt', ec['phone'])
             vf.append(drawtext(tf3, 58, '(h/2)+270', color=ORANGE, box=False))
-        fc = ('color=c=%s:s=%dx%d:d=2.4:r=%d[bg];[1:v]scale=420:-1[lg];[bg][lg]overlay=(W-w)/2:(H/2)-520[o];[o]%s,format=yuv420p[v]'
-              % (NAVY, W, H, FPS, ','.join(vf)))
+        fc = ('color=c=%s:s=%dx%d:d=%.2f:r=%d[bg];[1:v]scale=420:-1[lg];[bg][lg]overlay=(W-w)/2:(H/2)-520[o];[o]%s,format=yuv420p[v]'
+              % (NAVY, W, H, ECD, FPS, ','.join(vf)))
         run(['ffmpeg', '-y', '-loglevel', 'error', '-f', 'lavfi', '-i', 'anullsrc=r=44100:cl=stereo', '-i', os.path.abspath(LOGO_NAVY),
-             '-filter_complex', fc, '-map', '[v]', '-map', '0:a', '-t', '2.4', '-c:v', 'libx264', '-crf', '18', '-r', str(FPS),
+             '-filter_complex', fc, '-map', '[v]', '-map', '0:a', '-t', '%.2f' % ECD, '-c:v', 'libx264', '-crf', '18', '-r', str(FPS),
              '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-ar', '44100', '-ac', '2', end])
         final = os.path.join(tmp, 'all.mp4')
         run(['ffmpeg', '-y', '-loglevel', 'error', '-i', main, '-i', end, '-filter_complex',
              '[0:v][0:a][1:v][1:a]concat=n=2:v=1:a=1[v][a]', '-map', '[v]', '-map', '[a]',
              '-c:v', 'libx264', '-preset', 'medium', '-crf', '18', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-ar', '44100',
              '-movflags', '+faststart', final])
-        dur += 2.4
+        dur += ECD
     mu = s.get('music')
     if mu:
         # muziek onder de hele reel (ook eindkaart); bij spraak automatisch zachter (ducking)
@@ -636,7 +637,7 @@ def cmd_transcribe(src, out, lang='nl', model=None):
     print('klaar: %s (%d woorden, taal %s, model %s)' % (out, len(words), lang, model))
 
 
-ENDCARD = 2.4  # statische eindkaart: niet als 'bevroren' rekenen
+ENDCARD = 3.0  # statische eindkaart (2,4 s standaard, endcard.dur tot 3 s): niet als 'bevroren' rekenen
 
 
 def cmd_check(path, srt=None, foto=False, normaal=False):
