@@ -11,7 +11,7 @@
   python3 tools/edit_media.py audio ruw.mp4 uit.opus      # compact spraakspoor (16 kHz mono) voor transcriptie
   python3 tools/edit_media.py anonymize ruw.mp4 uit.mp4 [spec.json]  # gezichten auto + kentekens/vlakken vervagen (OpenCV)
   python3 tools/edit_media.py reframe ruw.mp4 uit.mp4     # liggend -> 9:16 die het onderwerp volgt (OpenCV)
-  python3 tools/edit_media.py check eind.mp4|eind.jpg [ondertitels.srt] [--foto]   # --foto: reel uit stilstaande foto's (make_reel)
+  python3 tools/edit_media.py check eind.mp4|eind.jpg [ondertitels.srt] [--foto] [--normaal]   # --foto: reel uit stilstaande foto's (make_reel); --normaal: gewone reel, lengte tot 90 s
         # technische keuring van het EINDBESTAND; exit 1 bij AFGEKEURD (dan niet naar V/posts)
   python3 tools/edit_media.py transcribe ruw.mp4|.opus uit.srt [nl|tr]
         # spraak -> ondertitels (.srt, max 32 tekens per regel). Lokaal alleen als faster-whisper +
@@ -303,7 +303,7 @@ def cmd_clip(spec_path, out):
     shutil.copy(final, out)
     shutil.rmtree(tmp, ignore_errors=True)
     if not 8 <= dur <= 14:
-        print('LET OP: lengte %.1f s valt buiten 8-14 s (Trial Reel).' % dur)
+        print('LET OP: lengte %.1f s valt buiten 8-14 s (Trial Reel; gewone reel mag langer, keur dan met --normaal).' % dur)
     print('klaar: %s (%.1f s, 1080x1920)' % (out, dur))
 
 
@@ -639,7 +639,7 @@ def cmd_transcribe(src, out, lang='nl', model=None):
 ENDCARD = 2.4  # statische eindkaart: niet als 'bevroren' rekenen
 
 
-def cmd_check(path, srt=None, foto=False):
+def cmd_check(path, srt=None, foto=False, normaal=False):
     """Harde eisen voor een eindbestand. Print per eis OK/FOUT; exit 1 bij een FOUT."""
     import re
     res = []
@@ -663,7 +663,10 @@ def cmd_check(path, srt=None, foto=False):
         eis((int(v['width']), int(v['height'])) == (W, H), 'afmeting 1080x1920 (9:16)', '%sx%s' % (v['width'], v['height']))
         eis(abs(fps - FPS) < 0.5, '30 fps', '%.2f' % fps)
         eis(v['codec_name'] == 'h264' and v.get('pix_fmt') == 'yuv420p', 'H.264 yuv420p', '%s %s' % (v['codec_name'], v.get('pix_fmt')))
-        eis(8.0 <= dur <= 14.0, 'lengte 8-14 s', '%.1f s' % dur)
+        if normaal:
+            eis(8.0 <= dur <= 90.0, 'lengte 8-90 s (gewone reel)', '%.1f s' % dur)
+        else:
+            eis(8.0 <= dur <= 14.0, 'lengte 8-14 s', '%.1f s' % dur)
         eis(a is not None and a['codec_name'] == 'aac', 'geluidsspoor AAC aanwezig', a['codec_name'] if a else 'geen')
         eis(os.path.getsize(path) < 100_000_000, 'bestand < 100 MB', '%.1f MB' % (os.path.getsize(path) / 1e6))
         if a:
@@ -731,8 +734,8 @@ def main():
     elif len(a) >= 3 and a[0] == 'reframe':
         cmd_reframe(a[1], a[2])
     elif len(a) >= 2 and a[0] == 'check':
-        rest = [x for x in a[2:] if x != '--foto']
-        cmd_check(a[1], rest[0] if rest else None, foto='--foto' in a)
+        rest = [x for x in a[2:] if x not in ('--foto', '--normaal')]
+        cmd_check(a[1], rest[0] if rest else None, foto='--foto' in a, normaal='--normaal' in a)
     elif len(a) >= 3 and a[0] == 'transcribe':
         cmd_transcribe(a[1], a[2], a[3] if len(a) > 3 else 'nl')
     elif len(a) >= 2 and a[0] == 'info':
