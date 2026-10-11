@@ -310,10 +310,10 @@ def level_final(path, tmp):
         return path  # stil spoor: niets doen
     gain = -16.0 - float(m.group(1))
     if abs(gain) < 0.3:
-        return path
+        gain = 0.0  # luidheid is goed; de limiter hieronder vangt alleen nog pieken af
     outp = os.path.join(tmp, 'level.mp4')
     run(['ffmpeg', '-y', '-loglevel', 'error', '-i', path, '-af',
-         'volume=%.2fdB,alimiter=limit=0.84:attack=5:release=50:level=disabled' % gain, '-c:v', 'copy',
+         'volume=%.2fdB,alimiter=limit=0.75:attack=5:release=50:level=disabled' % gain, '-c:v', 'copy',
          '-c:a', 'aac', '-b:a', '160k', '-ar', '44100', '-ac', '2', '-movflags', '+faststart', outp])
     return outp
 
