@@ -1,6 +1,12 @@
-{"images": ["https://cdn.shopify.com/s/files/1/1012/7776/1865/files/7e5baed206.jpg?v=1790949232"],
+{
+ "images": [
+  "https://cdn.shopify.com/s/files/1/1012/7776/1865/files/7e5baed206.jpg?v=1790949232"
+ ],
+ "hook": "Stekker versleten?",
  "kicker": "",
- "title": "Stekker versleten? 7-polig type N",
+ "title": "7-polig type N",
  "price": "€ 22 excl. btw",
  "line": "",
- "cta": "aysantruckparts.com"}
+ "cta": "aysantruckparts.com",
+ "music": "drive"
+}

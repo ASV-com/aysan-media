@@ -1,6 +1,14 @@
-{"images": ["https://cdn.shopify.com/s/files/1/1012/7776/1865/files/1628506a74.jpg?v=1790948733", "https://cdn.shopify.com/s/files/1/1012/7776/1865/files/c0e937f223.jpg?v=1790948142", "https://cdn.shopify.com/s/files/1/1012/7776/1865/files/6e7ea85fb5.jpg?v=1790947871"],
+{
+ "images": [
+  "https://cdn.shopify.com/s/files/1/1012/7776/1865/files/1628506a74.jpg?v=1790948733",
+  "https://cdn.shopify.com/s/files/1/1012/7776/1865/files/c0e937f223.jpg?v=1790948142",
+  "https://cdn.shopify.com/s/files/1/1012/7776/1865/files/6e7ea85fb5.jpg?v=1790947871"
+ ],
+ "hook": "Welke DAF rijd jij?",
  "kicker": "",
- "title": "XF105, XF106 of XG?",
+ "title": "XF105, XF106 of XG",
  "price": "",
- "line": "Welke DAF rijd jij?",
- "cta": "aysantruckparts.com"}
+ "line": "",
+ "cta": "aysantruckparts.com",
+ "music": "drive"
+}

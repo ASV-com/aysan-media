@@ -1,6 +1,14 @@
-{"images": ["https://cdn.shopify.com/s/files/1/1012/7776/1865/files/1187b35cfc.jpg?v=1790949131", "https://cdn.shopify.com/s/files/1/1012/7776/1865/files/776a07aa54.jpg?v=1790949017", "https://cdn.shopify.com/s/files/1/1012/7776/1865/files/7b9f60e24e.jpg?v=1790948851"],
+{
+ "images": [
+  "https://cdn.shopify.com/s/files/1/1012/7776/1865/files/1187b35cfc.jpg?v=1790949131",
+  "https://cdn.shopify.com/s/files/1/1012/7776/1865/files/776a07aa54.jpg?v=1790949017",
+  "https://cdn.shopify.com/s/files/1/1012/7776/1865/files/7b9f60e24e.jpg?v=1790948851"
+ ],
+ "hook": "Welke Volvo rijd jij?",
  "kicker": "",
- "title": "FH4 of FH5?",
+ "title": "FH4 of FH5",
  "price": "",
- "line": "Welke Volvo rijd jij?",
- "cta": "aysantruckparts.com"}
+ "line": "",
+ "cta": "aysantruckparts.com",
+ "music": "drive"
+}

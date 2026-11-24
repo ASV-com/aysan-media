@@ -1,6 +1,12 @@
-{"images": ["https://cdn.shopify.com/s/files/1/1012/7776/1865/files/4769b8bea3.jpg?v=1790949123"],
+{
+ "images": [
+  "https://cdn.shopify.com/s/files/1/1012/7776/1865/files/4769b8bea3.jpg?v=1790949123"
+ ],
+ "hook": "Rammelt je spatbord?",
  "kicker": "",
- "title": "Rammelt je spatbord? Check dit rubber",
+ "title": "Check dit rubber",
  "price": "€ 4,50 excl. btw",
  "line": "",
- "cta": "aysantruckparts.com"}
+ "cta": "aysantruckparts.com",
+ "music": "drive"
+}

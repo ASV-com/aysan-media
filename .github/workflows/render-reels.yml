@@ -19,7 +19,7 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq ffmpeg fonts-liberation
-          pip install -q pillow
+          pip install -q pillow numpy
       - name: Renderen (alleen specs zonder mp4)
         run: |
           set -e

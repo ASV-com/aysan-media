@@ -1,6 +1,12 @@
-{"images": ["https://cdn.shopify.com/s/files/1/1012/7776/1865/files/496a899b71.jpg?v=1790949296"],
+{
+ "images": [
+  "https://cdn.shopify.com/s/files/1/1012/7776/1865/files/496a899b71.jpg?v=1790949296"
+ ],
+ "hook": "Zijlamp kapot?",
  "kicker": "",
- "title": "Zijlamp kapot? Ovale markeringslamp",
+ "title": "Ovale markeringslamp",
  "price": "€ 14 excl. btw",
  "line": "",
- "cta": "aysantruckparts.com"}
+ "cta": "aysantruckparts.com",
+ "music": "drive"
+}

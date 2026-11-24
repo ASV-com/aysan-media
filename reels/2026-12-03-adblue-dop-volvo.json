@@ -1,6 +1,12 @@
-{"images": ["https://cdn.shopify.com/s/files/1/1012/7776/1865/files/3dc910ed3b.jpg?v=1790949691"],
+{
+ "images": [
+  "https://cdn.shopify.com/s/files/1/1012/7776/1865/files/3dc910ed3b.jpg?v=1790949691"
+ ],
+ "hook": "AdBlue-dop Volvo kwijt?",
  "kicker": "OUTLET",
- "title": "AdBlue-dop Volvo kwijt?",
+ "title": "AdBlue-dop Volvo",
  "price": "€ 25 excl. btw",
  "line": "Op = op.",
- "cta": "aysantruckparts.com"}
+ "cta": "aysantruckparts.com",
+ "music": "drive"
+}

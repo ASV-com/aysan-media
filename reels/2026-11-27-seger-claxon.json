@@ -1,6 +1,12 @@
-{"images": ["https://cdn.shopify.com/s/files/1/1012/7776/1865/files/840da87f46.jpg?v=1790948528"],
+{
+ "images": [
+  "https://cdn.shopify.com/s/files/1/1012/7776/1865/files/840da87f46.jpg?v=1790948528"
+ ],
+ "hook": "Claxon klinkt zwak?",
  "kicker": "",
- "title": "Merk in beeld: Seger 24V claxon",
+ "title": "Seger 24V claxon",
  "price": "€ 95 excl. btw",
  "line": "",
- "cta": "aysantruckparts.com"}
+ "cta": "aysantruckparts.com",
+ "music": "drive"
+}
