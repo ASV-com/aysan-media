@@ -15,11 +15,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Modelcache (rembg)
+        uses: actions/cache@v4
+        with:
+          path: ~/.u2net
+          key: rembg-isnet-general-use-v1
       - name: Installeren
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq ffmpeg fonts-liberation
-          pip install -q pillow numpy
+          pip install -q pillow numpy "rembg[cpu]" pedalboard
       - name: Renderen (alleen specs zonder mp4)
         run: |
           set -e

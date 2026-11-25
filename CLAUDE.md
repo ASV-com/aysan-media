@@ -8,7 +8,7 @@ Nooit code van het voorraadsysteem, prijslijsten, klant- of ordergegevens, budge
 - `brand/` : logo's, profielfoto, omslagfoto. Niet overschrijven zonder opdracht van V. `brand/music/`: EIGEN composities (tools/make_music.py, eigendom Aysan, vrij te gebruiken). Muziek van derden nooit in deze repo.
 - `tools/make_post.py` : maakt merk-afbeeldingen (navy/oranje) uit een JSON-spec, 4:5 post of 9:16 story.
 - `tools/edit_media.py` : bewerkt ruwe video/foto (knippen, 9:16, kleur, geluid, ondertitels, logo, eindkaart, scenes, stabiliseren, ruisonderdrukking, muziek met ducking, woord-voor-woord ondertitels, inzoomen, productfoto-kaart, vervagen van gezichten/kentekens, slim 9:16-uitsnijden (OpenCV: pip install "opencv-python-headless<5"); alleen ffmpeg; transcriptie via de Action in de privé-repo ASV, nooit audio hier). `edit_media.py check <bestand>` = verplichte technische keuring van elk eindbestand voor het in `posts/` komt voor de Mediabewerker (ASV-skill `media-studio`). Bronnen lokaal, nooit in de repo.
-- `tools/make_reel.py` + `reels/` : 9:16-reel (mp4, ~10 s, v2: haak in beeld vanaf frame 0, cuts op de maat, eigen muziek, loop) uit 1-4 Shopify-foto's. Rendert via GitHub Actions (de sandbox kan cdn.shopify.com niet bereiken).
+- `tools/make_reel.py` + `reels/` : 9:16-reel (mp4, ~10-11 s, v3: product vrijstaand op lichte studio-achtergrond, haak vanaf frame 0, rustige push/slide en continue detail-zoom, gemixte eigen muziek, loop) uit 1-4 Shopify-foto's. Rendert via GitHub Actions (de sandbox kan cdn.shopify.com niet bereiken).
 
 ## Werkwijze afbeelding -> post
 1. `python3 tools/make_post.py spec.json posts/<naam>.jpg`
@@ -21,10 +21,10 @@ Nooit code van het voorraadsysteem, prijslijsten, klant- of ordergegevens, budge
 Productfoto's van Shopify (cdn.shopify.com) zijn al openbaar en mogen direct als media in Metricool.
 
 ## Werkwijze reel (1x per week, gewone Reel)
-1. Schrijf `reels/JJJJ-MM-DD-onderwerp.json`: {"images": [1-4 cdn.shopify.com-URL's], "hook": probleem of vraag, max 6 woorden (eerste beeld, bv. "Zijlamp kapot?"; NIET de productnaam), "kicker": "OUTLET" of leeg, "title": productnaam, max 6 woorden, "music": "drive"|"werk"|"rustig", "price": exact Shopify-prijs + " excl. btw", "line": bv. "Op = op." (alleen outlet), "cta": "aysantruckparts.com"}. Alleen toegestane claims.
+1. Schrijf `reels/JJJJ-MM-DD-onderwerp.json`: {"images": [1-4 cdn.shopify.com-URL's], "hook": probleem of vraag, max 6 woorden (eerste beeld, bv. "Zijlamp kapot?"; NIET de productnaam), "kicker": "OUTLET" of leeg, "title": productnaam, max 6 woorden, "music": "werk" (default)|"drive"|"rustig", "price": exact Shopify-prijs + " excl. btw", "line": bv. "Op = op." (alleen outlet), "cta": "aysantruckparts.com"}. Alleen toegestane claims.
 2. Commit + push naar `main`. De Action `render-reels` maakt `posts/<naam>.mp4` en cover `posts/<naam>.jpg`.
 3. Wacht tot `https://raw.githubusercontent.com/ASV-com/aysan-media/main/posts/<naam>.mp4` 200 geeft (poll elke 30 s, max 10 min; `git pull` en bekijk de cover met de Read-tool).
-   Keur daarna: `python3 tools/edit_media.py check posts/<naam>.mp4` (v2 heeft continu beweging: ZONDER --foto). AFGEKEURD = niet inplannen en melden.
+   Keur daarna: `python3 tools/edit_media.py check posts/<naam>.mp4` (continu beweging: ZONDER --foto). AFGEKEURD = niet inplannen en melden.
 4. Metricool `createScheduledPost`: providers instagram, instagramData {"type": "REEL", "showReelOnFeed": true} (NOOIT TRIAL_REEL: Instagram weigert die zolang het account de volgerseis niet haalt, besluit V 7-10-2026), media [mp4-URL], videoThumbnailUrl [cover-URL], tekst + hashtags zoals een productpost. Geen mp4 binnen 10 min: sla de reel deze week over en meld het.
 
 ## Media van het team (Google Drive, map "Aysan Media")
