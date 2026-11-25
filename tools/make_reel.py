@@ -32,8 +32,8 @@ NAVY = (29, 31, 46); ORANGE = (255, 107, 0); WHITE = (255, 255, 255)
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.join(HERE, '..')
 LOGO = os.path.join(ROOT, 'brand', 'logo_op_navy.png')
 STYLES = {'werk': 102, 'drive': 118, 'rustig': 88}
-PROD_C = (540, 830)            # middelpunt productvlak
-PROD_MAX = (900, 600)          # max afmeting product bij schaal 1.0
+PROD_C = (540, 870)            # middelpunt productvlak
+PROD_MAX = (900, 560)          # max afmeting product bij schaal 1.0
 T_PUSH = 10                    # frames per push/slide
 
 
@@ -82,6 +82,15 @@ def text_block(text, size, color, maxw=930):
     for i, ln in enumerate(lines):
         d.text(((W - d.textlength(ln, font=f)) / 2, i * lh), ln, font=f, fill=color)
     return im
+
+
+def text_fit(text, sizes, color):
+    """Grootste lettergrootte waarbij de tekst op 1 regel past; anders de kleinste (2 regels)."""
+    d0 = ImageDraw.Draw(Image.new('RGB', (1, 1)))
+    for sz in sizes:
+        if len(wrap(d0, text, font(sz), 930)) == 1:
+            return text_block(text, sz, color)
+    return text_block(text, sizes[-1], color)
 
 
 def pill(txt, size, bg, fg=WHITE):
@@ -142,6 +151,9 @@ def studio_bg():
     k = np.clip(r, 0, 1)[..., None] ** 1.4
     img = c0 * (1 - k) + c1 * k + np.random.default_rng(1).normal(0, 1.6, (H, W, 1))
     return Image.fromarray(np.clip(img, 0, 255).astype(np.uint8), 'RGB')
+
+
+BG_PAD = 60  # achtergrond iets groter: langzame drift zodat het beeld nooit 'bevriest'
 
 
 class Product:
@@ -299,12 +311,12 @@ def main(spec, out):
 
     prods = [Product(load(u)) for u in imgs]
     shots = plan(len(prods)); dur = shots[-1][1]; nfr = int(round(dur * FPS))
-    bg = studio_bg().convert('RGBA')
+    bg = studio_bg().convert('RGBA').resize((W + BG_PAD, H + BG_PAD), Image.BICUBIC)
     t_hook_end, t_price, t_cta = shots[0][1], shots[-2][0], shots[-1][0]
 
-    hook_img = text_block(hook, 104, NAVY)
+    hook_img = text_fit(hook, (104, 96, 88, 80), NAVY)
     kicker_img = pill(s['kicker'].upper(), 34, ORANGE) if s.get('kicker') else None
-    title_img = text_block(title, 68, NAVY)
+    title_img = text_fit(title, (68, 62, 56), NAVY)
     price_img = pill(s['price'], 74, ORANGE) if s.get('price') else None
     line_img = text_block(s['line'], 46, NAVY) if s.get('line') else None
     lg = Image.open(LOGO).convert('RGBA'); lg = lg.resize((300, int(lg.height * 300 / lg.width)), Image.LANCZOS)
@@ -319,7 +331,7 @@ def main(spec, out):
 
     def prod_state(i, t):
         st, en, kind, pi = shots[i]; u = (t - st) / (en - st)
-        bob = 7 * np.sin(2 * np.pi * t / 2.6)
+        bob = 9 * np.sin(2 * np.pi * t / 2.6)
         if kind == 'hook':
             return pi, 1.12 + 0.03 * ease_sine(u), 0, bob, 0.0
         if kind == 'hero':
@@ -328,14 +340,15 @@ def main(spec, out):
             z = ease_io(u / 0.22) - ease_io((u - 0.80) / 0.20)
             return pi, 1.0 + 0.65 * z + 0.04 * ease_sine(u), 0, bob * (1 - z), z
         if kind == 'other':
-            return pi, 1.0 + 0.06 * ease_sine(u), 0, bob, 0.0
+            return pi, 1.0 + 0.09 * ease_sine(u), 0, bob, 0.0
         if kind == 'price':
-            return pi, 0.94 + 0.05 * ease_sine(u), 0, bob - 20, 0.0
+            return pi, 0.94 + 0.07 * ease_sine(u), 0, bob - 20, 0.0
         return pi, 0.99 + 0.13 * ease_io(u), 0, bob - 20 * (1 - ease_io(u)), 0.0   # cta -> terug naar hook-kader
 
     def frame(fi):
         t = fi / FPS; i = shot_index(t); st, en, kind, pi = shots[i]
-        im = bg.copy(); k = (t - st) * FPS
+        ox = BG_PAD / 2 + 26 * np.sin(2 * np.pi * t / 7.0); oy = BG_PAD / 2 + 26 * np.cos(2 * np.pi * t / 9.0)
+        im = bg.crop((int(ox), int(oy), int(ox) + W, int(oy) + H)); k = (t - st) * FPS
         if i > 0 and shots[i - 1][3] != pi and k < T_PUSH:                    # push/slide met onscherpte
             p = ease_io(k / T_PUSH); blur = 70 * np.sin(np.pi * p)
             a = prod_state(i - 1, st - 1e-3); b = prod_state(i, t)
