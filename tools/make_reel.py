@@ -17,7 +17,7 @@ Opbouw v3 (onderbouwing: rapport 'Pakkende product reels formats', nov 2026):
   contactschaduw; lukt vrijstaand niet, dan een fotokaart met afgeronde hoeken.
 - Rustig tempo, 5-6 shots: hero met haak (0-1,5 s), hero met titel, detail via CONTINUE zoom
   (1 foto) of andere foto's via push/slide met bewegingsonscherpte (10 f, easeInOutCubic),
-  terug naar de hero voor de prijs, CTA-balk onderin. Laatste beeld sluit aan op het eerste (loop).
+  terug naar de hero voor de prijs, CTA-balk onderin (product wijkt omhoog, prijs blijft vrij).
 - Tekst staat stil tijdens lezen (in 7 f, uit 5 f), binnen de veilige zone (y 270-1250, x 65-1015).
 - Geluid: eigen muziek, gemixt (filters, compressie, ruimte, limiter) + 2 zachte accenten, -16 LUFS (eis van edit_media check).
 Uitvoer 1080x1920, 30 fps, H.264 + AAC 48 kHz, plus cover-JPEG naast de mp4.
@@ -343,7 +343,7 @@ def main(spec, out):
             return pi, 1.0 + 0.09 * ease_sine(u), 0, bob, 0.0
         if kind == 'price':
             return pi, 0.94 + 0.07 * ease_sine(u), 0, bob - 20, 0.0
-        return pi, 0.99 + 0.13 * ease_io(u), 0, bob - 20 * (1 - ease_io(u)), 0.0   # cta -> terug naar hook-kader
+        return pi, 0.96 - 0.16 * ease_io(u * 2), 0, bob - 20 - 110 * ease_io(u * 2), 0.0   # cta: product kleiner en omhoog, prijs eronder
 
     def frame(fi):
         t = fi / FPS; i = shot_index(t); st, en, kind, pi = shots[i]
@@ -383,7 +383,7 @@ def main(spec, out):
             k2 = (t - t_price - 0.15) * FPS / 9
             sc = 1.0 + 0.08 * np.sin(np.pi * min(k2, 1.0)) if k2 < 1 else 1.0
             pimg = price_img if sc == 1.0 else price_img.resize((int(price_img.width * sc), int(price_img.height * sc)), Image.BICUBIC)
-            py = 1120 if t < t_cta else int(1120 - 150 * ease_out((t - t_cta) * FPS / 9))
+            py = 1120 if t < t_cta else int(1120 - 100 * ease_io((t - t_cta) * 2 / (dur - t_cta)))
             im.alpha_composite(fade(pimg, min(1.0, k2 * 1.5)), ((W - pimg.width) // 2, py - (pimg.height - price_img.height) // 2))
         # CTA-balk schuift van onder in
         if t >= t_cta:
