@@ -3,6 +3,9 @@
 Deze repository is OPENBAAR. Alleen beeldmateriaal voor social media.
 Nooit code van het voorraadsysteem, prijslijsten, klant- of ordergegevens, budgetten of tokens.
 
+## Klanttekst (geldt voor beeld EN posttekst/caption)
+Alles wat de klant ziet is klanttekst. Nooit interne planning of formatnamen: geen "DAF-week", "Volvo-week", "thema van de week", "DAF-editie", "Merk in beeld", "Waarom Aysan", "Achter de schermen", "pijler", "weekfocus". Begin de caption met de haak (probleem of vraag), niet met een label (besluit V 27-11-2026).
+
 ## Structuur
 - `posts/` : een JPEG per post (of mp4 + cover-JPEG bij een reel), naam `JJJJ-MM-DD-onderwerp.jpg|mp4` (kleine letters, koppeltekens). Alleen eindbeeld, nooit ruw materiaal.
 - `brand/` : logo's, profielfoto, omslagfoto. Niet overschrijven zonder opdracht van V. `brand/music/`: EIGEN composities (tools/make_music.py, eigendom Aysan, vrij te gebruiken). Muziek van derden nooit in deze repo.
