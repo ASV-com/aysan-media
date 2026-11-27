@@ -298,8 +298,27 @@ def plan(n):
     return sh + [(t, t + 1.9, 'price', 0), (t + 1.9, t + 3.5, 'cta', 0)]
 
 
+# Tekst in beeld is klanttekst. Interne formatnamen/pijlers en niet-toegestane claims blokkeren de render.
+VERBODEN = ['merk in beeld', 'product in beeld', 'achter de schermen', 'waarom aysan', 'contentpijler', 'pijler',
+            'weekfocus', 'reel', 'tip voor de', 'concept', 'placeholder', 'todo', 'op voorraad', 'goedkoopste',
+            '40%', 'gratis verzending', 'morgen in huis', 'morgen erop', 'garantie', 'heel europa', 'gratis retour']
+
+
+def tekstcontrole(s):
+    fouten = []
+    for veld in ('hook', 'kicker', 'title', 'line', 'price', 'cta'):
+        v = (s.get(veld) or '').lower()
+        for w in VERBODEN:
+            if w in v:
+                fouten.append('%s bevat "%s": %s' % (veld, w, s.get(veld)))
+    if fouten:
+        sys.exit('GEWEIGERD (tekst in beeld): ' + '; '.join(fouten) +
+                 '. Gebruik productnaam of klantvoordeel, nooit interne formatnamen of niet-toegestane claims.')
+
+
 def main(spec, out):
     s = json.load(open(spec))
+    tekstcontrole(s)
     imgs = s.get('images') or []
     if not 1 <= len(imgs) <= 4:
         sys.exit("images: 1 tot 4 foto's nodig")

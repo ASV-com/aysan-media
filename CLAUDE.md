@@ -22,6 +22,7 @@ Productfoto's van Shopify (cdn.shopify.com) zijn al openbaar en mogen direct als
 
 ## Werkwijze reel (1x per week, gewone Reel)
 1. Schrijf `reels/JJJJ-MM-DD-onderwerp.json`: {"images": [1-4 cdn.shopify.com-URL's], "hook": probleem of vraag, max 6 woorden (eerste beeld, bv. "Zijlamp kapot?"; NIET de productnaam), "kicker": "OUTLET" of leeg, "title": productnaam, max 6 woorden, "music": "werk" (default)|"drive"|"rustig", "price": exact Shopify-prijs + " excl. btw", "line": bv. "Op = op." (alleen outlet), "cta": "aysantruckparts.com"}. Alleen toegestane claims.
+   TEKST IN BEELD = KLANTTEKST (incident 27-11-2026: "Merk in beeld: DAF" stond als titel in een live reel). Nooit interne formatnamen of pijlers ("Merk in beeld", "Waarom Aysan", "Achter de schermen", "Tip voor...") en nooit "op voorraad" in hook/title/line. make_reel.py weigert zulke tekst (geen mp4 = reel overslaan en melden). Bekijk voor het inplannen 3 frames (0,5 s, 3 s, 8 s) met de Read-tool en lees alle tekst.
 2. Commit + push naar `main`. De Action `render-reels` maakt `posts/<naam>.mp4` en cover `posts/<naam>.jpg`.
 3. Wacht tot `https://raw.githubusercontent.com/ASV-com/aysan-media/main/posts/<naam>.mp4` 200 geeft (poll elke 30 s, max 10 min; `git pull` en bekijk de cover met de Read-tool).
    Keur daarna: `python3 tools/edit_media.py check posts/<naam>.mp4` (continu beweging: ZONDER --foto). AFGEKEURD = niet inplannen en melden.
